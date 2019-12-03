@@ -1,0 +1,168 @@
+---
+title: <span style="color:#DC143C"> Laboratorio 8 </span>
+author: "Por: Ryo Shiba" 
+date: "02/12/2019" 
+output: 
+  html_document:
+    toc: true 
+    toc_float: true
+    toc_depth: 5
+    theme: flatly
+    color: red
+    higlight: tango 
+    df_print: kable
+    css: styles.css
+    code_download: true
+---
+
+```{r setup, include=FALSE }
+knitr::opts_chunk$set(echo = TRUE,
+collapse = TRUE,
+out.width = "100%")
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+library(ggExtra)
+library(hrbrthemes)
+library(gganimate)
+library(RColorBrewer)
+```
+
+&nbsp;
+
+## **1. Base datos**  
+
+Se procede a trabajar en la malla de datos obtenida de la red
+```{r base, message = FALSE}
+waste_vs_gdp <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/per-capita-plastic-waste-vs-gdp-per-capita.csv")
+mismanaged_vs_gdp <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/per-capita-mismanaged-plastic-waste-vs-gdp-per-capita.csv")
+coast_vs_waste <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/coastal-population-vs-mismanaged-plastic.csv")
+
+```
+
+La malla de datos a emplear se edita debido a que tiene muchos valores NA
+
+```{r}
+coast_vs_waste1 <- 
+  coast_vs_waste %>%
+  as_tibble() %>% 
+  filter(Year == 2010) %>% 
+  drop_na() %>%
+  arrange(desc(`Total population (Gapminder)`)) %>% 
+  print(n = 10)
+```
+
+```{r}
+mismanaged_vs_gdp1 <- 
+  mismanaged_vs_gdp %>%
+  as_tibble() %>% 
+  filter(Year == 2010) %>% 
+  drop_na() %>%
+  arrange(desc(`Total population (Gapminder)`)) %>% 
+  print(n = 10)
+```
+
+```{r}
+waste_vs_gdp1 <- 
+  waste_vs_gdp %>%
+  as_tibble() %>% 
+  filter(Year == 2010) %>% 
+  drop_na() %>%
+  arrange(desc(`Total population (Gapminder)`)) %>% 
+  print(n = 10)
+```
+
+La tabla que se obtiene es solo para el año <span style="color:#DC143C">2010</span>
+
+&nbsp;
+
+Para la malla<span style="color:#66CDAA"> cost_vs_waste</span>
+```{r, echo=FALSE}
+coast_vs_waste1[1:8,] %>% 
+  kable() %>% 
+  kable_styling(bootstrap = c("striped", "hover",
+    "condensed", "bordered", stripe_color = "Crimson", row_label_position = "c")) %>%   scroll_box(height = "250px")
+```
+
+&nbsp;
+
+Para la malla<span style="color:#66CDAA"> missmanaged_vs_gdp</span>
+```{r, echo=FALSE}
+mismanaged_vs_gdp1[1:8,] %>% 
+  kable() %>% 
+  kable_styling(bootstrap = c("striped", "hover",
+    "condensed", "bordered", stripe_color = "Crimson", row_label_position = "c")) %>%   scroll_box(height = "250px")
+```
+
+&nbsp;
+
+Para la malla<span style="color:#66CDAA"> waste_vs_gdp1</span>
+```{r, echo=FALSE}
+waste_vs_gdp1[1:8,] %>% 
+  kable() %>% 
+  kable_styling(bootstrap = c("striped", "hover",
+    "condensed", "bordered", stripe_color = "Crimson", row_label_position = "c")) %>%   scroll_box(height = "250px")
+```
+
+&nbsp;
+
+## **2. Gráficos**  
+
+Se generan 4 gráficos a partir de las mallas de datos descargadas. Para la malla <span style="color:#66CDAA"> cost_vs_waste,</span> se genera una variable que indica el porcentaje de población que vive en la costa **("Poblac")**
+
+```{r}
+coast_vs_waste1 <-
+  coast_vs_waste1 %>% 
+  mutate(Poblac = (`Coastal population`*100)/`Total population (Gapminder)`) %>%   mutate(Costa1 = `Coastal population`/1000000) %>% 
+  print() 
+```
+
+<span style="color:#FF6347">**a) Gráfico 1**</span>   
+La primera que se genera es una gráfica que indica que hay una ligera *tendencia* entre el porcentaje que vive en la costa, con la falta de manejo de basura; así como el tamaño de la población que vivve en la costa.
+
+```{r, dpi= 128, message= FALSE, echo= FALSE}
+ggplot(coast_vs_waste1, aes(x=`Poblac`, y= Costa1, size =`Total population (Gapminder)`, color = Poblac)) +
+  geom_point(alpha=0.6) +
+  theme_ipsum() +
+  theme(legend.position="right") +
+  ylab("Mismanaged plastic waste (mill tonnes)") +
+  xlab("% Coastal Pop") +
+  scale_y_continuous(breaks = seq(25,250, 50)) 
+```
+
+&nbsp;
+
+<span style="color:#FF6347">**b) Gráfico 2**</span>
+EN el segundo gráfico se observa la misma distribución que la naterior, pero con la diferencia de que a través de los histogramas, se logra apreciar mejor que <span style="color:##4B0082"**la mayor parte de la población se concentra en los que desechan menor cantidad de millones de toneladas**</span>, además de apreciarse que la gran mayoría tiene un porcentaje alto de población que vive en la costa.
+
+```{r, dpi= 128,message= FALSE}
+x <- ggplot(coast_vs_waste1, aes(x=Poblac, y=Costa1, color='Total population (Gapminder)', size = Costa1)) +
+  geom_point() +
+  theme(legend.position="botom")
+ggMarginal(x, type="histogram", fill = "SpringGreen", yparams = list(bins=10), xparams = list(bins=10), groupColour = TRUE, size = 2) 
+
+```
+
+&nbsp;
+
+<span style="color:#FF6347">**b) Gráfico 3**</span>
+
+## **3. Enviados**
+El gráfico que se subio al *twitter* fue la sieguiente:  
+
+```{r out.width = "75%", fig.align= 'center'}
+include_graphics("C:/Users/arshiba/Desktop/Respaldo USB 11 Dic 2018/Semestre 3/Programacion R/Clase 12/Laboratorio 8/Rplot_1.png")
+```
+Tambien se presenta la captura de pantalla de cuando se mando a **Twitter**
+
+```{r out.width = "75%", fig.align= 'center'}
+include_graphics("C:/Users/arshiba/Desktop/Respaldo USB 11 Dic 2018/Semestre 3/Programacion R/Clase 12/Laboratorio 8/IMG_4271.png")
+```
+
+
+
+
+
+
